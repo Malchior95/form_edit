@@ -1,0 +1,29 @@
+name: test1
+description: "A new Flutter project."
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  json_annotation: ^4.9.0
+  intl: ^0.20.1 #date formatting
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+  build_runner: ^2.4.14
+  json_serializable: ^6.9.3
+
+flutter:
+  uses-material-design: true
+  assets:
+    - lib/devData/data1.json

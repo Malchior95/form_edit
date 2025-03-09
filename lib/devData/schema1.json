@@ -1,0 +1,63 @@
+{
+  "type": "object",
+  "value": null,
+  "key": "root",
+  "children": [
+    {
+      "type": "string",
+      "key": "property 1"
+    },
+    {
+      "type" : "datetime",
+      "key": "property 2"
+    },
+    {
+      "type": "integer",
+      "key": "property 3"
+    },
+    {
+      "type": "object",
+      "key": "property 4",
+      "children": [
+        {
+          "type" : "string",
+          "key": "prop 4_1"
+        },
+        {
+          "type": "number",
+          "key": "prop 4_2"
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "key": "prop 5",
+      "children": [
+        {
+          "type": "string",
+          "key": "prop 5_1"
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "key": "property 6",
+      "children": [
+        {
+          "type": "object",
+          "key": "object 6",
+          "children": [
+            {
+              "type": "string",
+              "key": "nested_prop_1"
+            },
+            {
+              "type": "integer",
+              "key": "nested_prop_2"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

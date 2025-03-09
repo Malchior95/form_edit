@@ -1,0 +1,87 @@
+{
+  "type": "object",
+  "key": "root",
+  "children": [
+    {
+      "type": "string",
+      "value": "hello, world",
+      "key": "property 1"
+    },
+    {
+      "type" : "datetime",
+      "value": "2012-04-23T18:25:43.511Z",
+      "key": "property 2"
+    },
+    {
+      "type": "integer",
+      "value": 12,
+      "key": "property 3"
+    },
+    {
+      "type": "object",
+      "key": "property 4",
+      "children": [
+        {
+          "type" : "string",
+          "value": "this is an object",
+          "key": "prop 4_1"
+        },
+        {
+          "type": "number",
+          "value": 12.1,
+          "key": "prop 4_2"
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "key": "prop 5",
+      "children": [
+        {
+          "type": "string",
+          "value": "list item 1"
+        },
+        {
+          "type": "string",
+          "value": "list item 2"
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "key": "property 6",
+      "children": [
+        {
+          "type": "object",
+          "children": [
+            {
+              "type": "string",
+              "value": "prop 1 of list item 1",
+              "key": "nested_prop_1"
+            },
+            {
+              "type": "integer",
+              "value": 12,
+              "key": "nested_prop_2"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "children": [
+            {
+              "type": "string",
+              "value": "prop 1 of list item 2",
+              "key": "nested_prop_1"
+            },
+            {
+              "type": "integer",
+              "value": 12,
+              "key": "nested_prop_22"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
