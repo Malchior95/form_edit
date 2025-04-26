@@ -1,3 +1,4 @@
+import 'package:dotted_decoration/dotted_decoration.dart';
 import 'package:flutter/material.dart';
 import 'package:test1/models/data.dart';
 import 'package:intl/intl.dart';
@@ -9,16 +10,14 @@ class ReportCreator extends StatefulWidget {
   @override
   State<ReportCreator> createState() => _ReportCreatorState();
 
-  static Widget buildDataRow(ReportDataModel model, int nestingLevel) {
+  static Widget buildDataRow(ReportDataModel model) {
     var widget = switch (model.type) {
       ReportDataType.string => ReportTextField(model: model),
       ReportDataType.integer => ReportIntegerField(model: model),
       ReportDataType.datetime => ReportDateTimeField(model: model),
       ReportDataType.number => ReportNumberField(model: model),
-      ReportDataType.object =>
-        ReportObjectField(model: model, nestingLevel: nestingLevel),
-      ReportDataType.list =>
-        ReportListField(model: model, nestingLevel: nestingLevel),
+      ReportDataType.object => ReportObjectField(model: model),
+      ReportDataType.list => ReportListField(model: model),
       _ => Row(
           children: [
             Text("${model.type}"),
@@ -26,10 +25,7 @@ class ReportCreator extends StatefulWidget {
         )
     };
 
-    return switch (nestingLevel) {
-      <= 2 => widget,
-      _ => const Text("There will be a button to expand section."),
-    };
+    return widget;
   }
 }
 
@@ -37,23 +33,33 @@ class _ReportCreatorState extends State<ReportCreator> {
   @override
   Widget build(BuildContext context) {
     assert(widget.model.children != null);
-    final mainControl = Card(
-        child: Padding(
-            padding: EdgeInsets.all(8.0),
-            child: ReportCreatorObjectControl(onPressed: (x) {
-              if (x == null) return;
-              setState(() {
-                widget.model.children!.add(ReportDataModel(type: x));
-              });
-            })));
+    final mainControl = Padding(
+        padding: EdgeInsets.all(8.0),
+        child: ReportCreatorObjectControl(onPressed: (x) {
+          setState(() {
+            widget.model.children!.add(x);
+          });
+        }));
+
     var rows = widget.model.children!
         .map((x) => Card(
-              child: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: ReportCreator.buildDataRow(x, 0),
+              child: Column(
+                children: [
+                  if (x.key != null)
+                    Text(x.key!,
+                        style: TextStyle(
+                            color: Colors.blue,
+                            fontSize: 24.0,
+                            fontWeight: FontWeight.bold)),
+                  Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: ReportCreator.buildDataRow(x),
+                  ),
+                ],
               ),
             ))
         .toList();
+
     return Scaffold(
       floatingActionButton: IconButton(
         onPressed: () => Navigator.pop(context),
@@ -76,7 +82,8 @@ class _ReportCreatorState extends State<ReportCreator> {
 }
 
 class ReportCreatorObjectControl extends StatelessWidget {
-  final ValueChanged<ReportDataType?> onPressed;
+  final ValueChanged<ReportDataModel> onPressed;
+
   static const List<ReportDataType> reportDataTypes = [
     ReportDataType.list,
     ReportDataType.photo,
@@ -86,27 +93,51 @@ class ReportCreatorObjectControl extends StatelessWidget {
     ReportDataType.datetime,
     ReportDataType.object
   ];
+
   const ReportCreatorObjectControl({super.key, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        DropdownMenu(
-            onSelected: onPressed,
-            dropdownMenuEntries: reportDataTypes
-                .map((x) => DropdownMenuEntry(value: x, label: x.toString()))
-                .toList())
+        //todo: static creator...
+        IconButton(
+            onPressed: () async {
+              final itemToAdd = await Navigator.push<ReportDataModel?>(context,
+                  MaterialPageRoute(builder: (context) {
+                final model = ReportDataModel(type: ReportDataType.string);
+                return Card(
+                  child: Column(
+                    children: [
+                      const Text("aaa"),
+                      ElevatedButton(
+                          onPressed: () => Navigator.pop(context, model),
+                          child: const Text("add"))
+                    ],
+                  ),
+                );
+              }));
+              if (itemToAdd != null) onPressed(itemToAdd);
+            },
+            icon: Icon(Icons.add))
       ],
     );
+    //return Row(
+    //  children: [
+    //    DropdownMenu(
+    //        onSelected: onPressed,
+    //        dropdownMenuEntries: reportDataTypes
+    //            .map((x) => DropdownMenuEntry(value: x, label: x.toString()))
+    //            .toList())
+    //  ],
+    //);
   }
 }
 
 class ReportListField extends StatefulWidget {
   final ReportDataModel model;
-  final int nestingLevel;
-  const ReportListField(
-      {super.key, required this.model, required this.nestingLevel});
+
+  const ReportListField({super.key, required this.model});
 
   @override
   State<ReportListField> createState() => _ReportListFieldState();
@@ -115,36 +146,54 @@ class ReportListField extends StatefulWidget {
 class _ReportListFieldState extends State<ReportListField> {
   @override
   Widget build(BuildContext context) {
-    return buildListField(widget.model, widget.nestingLevel);
+    return buildListField(widget.model);
   }
 
-  Widget buildListField(ReportDataModel model, int nestingLevel) {
+  Widget buildListField(ReportDataModel model) {
     model.children ??= [];
     var control = ReportCreatorObjectControl(onPressed: (x) {
-      if (x == null) return;
       setState(() {
-        widget.model.children!.add(ReportDataModel(type: x));
+        widget.model.children!.add(x);
       });
     });
 
-    var rows = model.children!
-        .map((x) => Padding(
-              padding: const EdgeInsets.only(top: 8.0, left: 8.0),
-              child: ReportCreator.buildDataRow(x, nestingLevel + 1),
-            ))
-        .toList();
-    return Column(
-      children: [if (model.key != null) Text(model.key!), ...rows, control],
+    var rows = model.children!.map((x) {
+      if ([ReportDataType.list, ReportDataType.object].contains(x)) {
+        return Placeholder(); //todo: navigate to child object
+      }
+      return ReportCreator.buildDataRow(x);
+    }).toList();
+    //var rows = model.children!
+    //    .map((x) => Padding(
+    //          padding: const EdgeInsets.only(top: 8.0, left: 8.0),
+    //          child: ReportCreator.buildDataRow(x),
+    //        ))
+    //    .toList();
+    //return Column(
+    //  children: [if (model.key != null) Text(model.key!), ...rows, control],
+    //);
+
+    return Container(
+      decoration: DottedDecoration(
+        dash: [10, 5],
+        strokeWidth: 3,
+        linePosition: LinePosition.left,
+        color: Colors.blue,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 8.0),
+        child: Column(
+          children: [...rows, control],
+        ),
+      ),
     );
   }
 }
 
 class ReportObjectField extends StatefulWidget {
   final ReportDataModel model;
-  final int nestingLevel;
 
-  const ReportObjectField(
-      {super.key, required this.model, required this.nestingLevel});
+  const ReportObjectField({super.key, required this.model});
 
   @override
   State<ReportObjectField> createState() => _ReportObjectFieldState();
@@ -153,24 +202,38 @@ class ReportObjectField extends StatefulWidget {
 class _ReportObjectFieldState extends State<ReportObjectField> {
   @override
   Widget build(BuildContext context) {
-    return buildObjectField(widget.model, widget.nestingLevel);
+    return buildObjectField(widget.model);
   }
 
-  Widget buildObjectField(ReportDataModel model, int nestingLevel) {
+  Widget buildObjectField(ReportDataModel model) {
     model.children ??= [];
     var control = ReportCreatorObjectControl(onPressed: (x) {
-      if (x == null) return;
       setState(() {
-        widget.model.children!.add(ReportDataModel(type: x));
+        widget.model.children!.add(x);
       });
     });
-    var rows = model.children!
-        .map((x) => ReportCreator.buildDataRow(x, nestingLevel + 1))
-        .toList();
+    var rows = model.children!.map((x) {
+      if ([ReportDataType.list, ReportDataType.object].contains(x.type)) {
+        return Placeholder(); //todo: navigate to child object
+      }
+      return ReportCreator.buildDataRow(x);
+    }).toList();
+
     return Padding(
-      padding: const EdgeInsets.only(left: 8.0),
-      child: Column(
-        children: [if (model.key != null) Text(model.key!), ...rows, control],
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Container(
+        decoration: BoxDecoration(
+            border: Border(
+                left: BorderSide(
+          color: Colors.blue,
+          width: 3,
+        ))),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Column(
+            children: [...rows, control],
+          ),
+        ),
       ),
     );
   }
@@ -190,7 +253,8 @@ class ReportNumberField extends StatelessWidget {
     model.value ??= 0.0;
     return Row(
       children: [
-        if (model.key != null) Text("${model.key}: "),
+        if (model.key != null)
+          Text("${model.key}: ", style: TextStyle(fontWeight: FontWeight.bold)),
         Text("${model.value as double}"),
       ],
     );
@@ -215,7 +279,8 @@ class ReportDateTimeField extends StatelessWidget {
     final formattedDate = formatter.format(datetime);
     return Row(
       children: [
-        if (model.key != null) Text("${model.key}: "),
+        if (model.key != null)
+          Text("${model.key}: ", style: TextStyle(fontWeight: FontWeight.bold)),
         Text(formattedDate),
       ],
     );
@@ -236,7 +301,8 @@ class ReportIntegerField extends StatelessWidget {
     model.value ??= 0;
     return Row(
       children: [
-        if (model.key != null) Text("${model.key}: "),
+        if (model.key != null)
+          Text("${model.key}: ", style: TextStyle(fontWeight: FontWeight.bold)),
         Text("${model.value as int}"),
       ],
     );
@@ -245,6 +311,7 @@ class ReportIntegerField extends StatelessWidget {
 
 class ReportTextField extends StatelessWidget {
   final ReportDataModel model;
+
   const ReportTextField({super.key, required this.model});
 
   @override
@@ -256,7 +323,8 @@ class ReportTextField extends StatelessWidget {
     model.value ??= "string";
     return Row(
       children: [
-        if (model.key != null) Text("${model.key}: "),
+        if (model.key != null)
+          Text("${model.key}: ", style: TextStyle(fontWeight: FontWeight.bold)),
         Text(model.value as String),
       ],
     );
